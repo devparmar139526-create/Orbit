@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit AI Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Background with animated gradient -->
+    <div class="background-container">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+        <canvas id="particles-canvas"></canvas>
+    </div>
+
+    <!-- Custom Title Bar -->
+    <div class="titlebar glass-panel">
+        <div class="titlebar-drag-region">
+            <div class="titlebar-icon">
+                <div class="orbit-logo"></div>
+            </div>
+            <div class="titlebar-title">Orbit AI Assistant</div>
+        </div>
+        <div class="titlebar-controls">
+            <button class="titlebar-button" id="minimize-btn">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <line x1="0" y1="6" x2="12" y2="6" stroke="currentColor" stroke-width="1"/>
+                </svg>
+            </button>
+            <button class="titlebar-button" id="maximize-btn">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <rect x="2" y="2" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1"/>
+                </svg>
+            </button>
+            <button class="titlebar-button close-btn" id="close-btn">
+                <svg width="12" height="12" viewBox="0 0 12 12">
+                    <path d="M 2 2 L 10 10 M 10 2 L 2 10" stroke="currentColor" stroke-width="1"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Admin Sidebar -->
+        <div class="sidebar glass-panel">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">📊 Admin Dashboard</h3>
+                <div class="admin-info">
+                    <p class="info-label">Status</p>
+                    <p class="info-value" id="admin-status">Monitoring</p>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">💬 Conversation History</h3>
+                <div id="conversation-list" class="conversation-list">
+                    <p class="loading-text">Loading conversations...</p>
+                </div>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">📝 System Logs</h3>
+                <button class="glass-button" onclick="showLogs()">
+                    <span class="button-icon">📋</span>
+                    View Logs
+                </button>
+                <button class="glass-button" onclick="exportLogs()">
+                    <span class="button-icon">💾</span>
+                    Export Logs
+                </button>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">🔧 Management</h3>
+                <button class="glass-button" onclick="clearAllMemory()">
+                    <span class="button-icon">🗑️</span>
+                    Clear Memory
+                </button>
+                <button class="glass-button" onclick="refreshConversations()">
+                    <span class="button-icon">🔄</span>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-container">
+            <!-- Voice Visualizer -->
+            <div class="voice-visualizer" id="voice-visualizer" style="display: none;">
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+                <div class="voice-bar"></div>
+            </div>
+
+            <!-- Status Indicator -->
+            <div class="status-indicator glass-panel" id="status-indicator">
+                <span class="status-dot"></span>
+                <span id="status-text">Connecting...</span>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- Welcome Message -->
+                <div class="message-group system-message">
+                    <div class="message-bubble glass-bubble">
+                        <div class="message-content">
+                            <h2>Orbit Admin Dashboard 🛡️</h2>
+                            <p>Monitoring and management interface</p>
+                            <p class="message-hint">View conversation history, system logs, and memory management</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Logs Panel (Hidden by default) -->
+            <div class="logs-panel glass-panel" id="logs-panel" style="display: none;">
+                <div class="logs-header">
+                    <h3>📋 System Logs</h3>
+                    <button class="close-logs-btn" onclick="closeLogs()">✕</button>
+                </div>
+                <div class="logs-content" id="logs-content">
+                    <p class="loading-text">Loading logs...</p>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-container glass-panel">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="user-input" 
+                        class="text-input" 
+                        placeholder="Ask Orbit anything..."
+                        autocomplete="off"
+                    />
+                    <button class="voice-button" id="voice-btn" title="Voice Input">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 1C10.34 1 9 2.34 9 4v8c0 1.66 1.34 3 3 3s3-1.34 3-3V4c0-1.66-1.34-3-3-3z"/>
+                            <path d="M19 10v2c0 3.87-3.13 7-7 7s-7-3.13-7-7v-2"/>
+                            <path d="M12 19v4M8 23h8"/>
+                        </svg>
+                    </button>
+                    <button class="send-button" id="send-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

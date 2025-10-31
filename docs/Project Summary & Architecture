@@ -1,0 +1,422 @@
+# 🌐 orbit Project - Complete Overview
+
+## 📋 Project Summary
+
+**orbit** is a privacy-focused, locally-running AI assistant inspired by Jarvis from Iron Man. It combines voice interaction, local AI reasoning (via Ollama), internet knowledge APIs, and smart automation capabilities for both desktop and IoT control.
+
+### Core Philosophy
+- **Privacy First**: All AI processing happens locally using Ollama
+- **Modular Design**: Easy to extend with new features and actions
+- **No Vendor Lock-in**: No required cloud services or paid APIs
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+
+---
+
+## 🏗️ Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    USER INTERFACE                       │
+│              (Voice Input / Text Input)                 │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                 SPEECH-TO-TEXT (STT)                    │
+│           speech_recognition + Google API               │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│              INTENT CLASSIFICATION                      │
+│              (source_selector.py)                       │
+│                                                          │
+│  Determines: Weather? Wiki? Desktop? Schedule? LLM?     │
+└──┬────────┬────────┬────────┬────────┬─────────────────┘
+   │        │        │        │        │
+   ▼        ▼        ▼        ▼        ▼
+┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌──────────┐
+│Wiki │ │Weath│ │Deskt│ │Sched│ │   LLM    │
+│ API │ │ API │ │ Ctrl│ │uler │ │ (Ollama) │
+└──┬──┘ └──┬──┘ └──┬──┘ └──┬──┘ └────┬─────┘
+   │       │       │       │         │
+   └───────┴───────┴───────┴─────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────────┐
+│               RESPONSE GENERATION                        │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                TEXT-TO-SPEECH (TTS)                     │
+│                   pyttsx3                               │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                   USER OUTPUT                            │
+│              (Voice / Text Display)                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📦 Module Breakdown
+
+### 1. **Main Entry Point** (`bin/orbit.py`)
+- Initializes all components
+- Manages conversation loop
+- Handles text/voice modes
+- Coordinates between modules
+
+### 2. **Configuration** (`Orbit_core/config/`)
+- `settings.py`: Central configuration (API URLs, model names, preferences)
+- Manages environment variables
+- Stores system prompts and personality
+
+### 3. **Memory System** (`Orbit_core/memory/`)
+- `sqlite_store.py`: SQLite database for conversation history
+- Stores user/assistant messages
+- Manages scheduled tasks
+- Provides conversation context to LLM
+
+### 4. **LLM Integration** (`Orbit_core/llm/`)
+- `ollama_client.py`: Direct connection to Ollama server
+- `router.py`: Routes requests to appropriate LLM backend
+- Handles fallback responses when LLM unavailable
+- Manages chat context and system prompts
+
+### 5. **Intent Recognition** (`Orbit_core/intent/`)
+- `source_selector.py`: Classifies user intent
+- Routes queries to appropriate handlers:
+  - Factual queries → Wikipedia
+  - Weather queries → Weather API
+  - Commands → Desktop/IoT control
+  - Conversations → LLM
+  - Time-based → Scheduler
+
+### 6. **Action Handlers** (`Orbit_core/actions/`)
+
+#### a. **Wikipedia** (`wikipedia.py`)
+- Searches Wikipedia for factual information
+- Returns summarized articles
+- Handles "who is", "what is" queries
+
+#### b. **Weather** (`weather.py`)
+- Free Open-Meteo API integration
+- Geocoding for location lookup
+- Current weather conditions
+- Temperature, humidity, wind speed
+
+#### c. **Desktop Control** (`desktop.py`)
+- Cross-platform app launching
+- OS-specific command mapping
+- Supports Chrome, Firefox, VS Code, etc.
+- Safe by design (no close operations)
+
+#### d. **Scheduling** (`schedule_action.py`)
+- Parses time from natural language
+- Handles relative time ("in 30 minutes")
+- Handles absolute time ("at 5 PM")
+- Stores tasks in database
+
+#### e. **IoT Control** (`iot.py`)
+- HTTP-based device control
+- MQTT support (optional)
+- Configurable device mappings
+- Smart home integration ready
+
+### 7. **Speech-to-Text** (`Orbit_core/stt/`)
+- `deep.py`: Voice recognition using `speech_recognition`
+- Google Speech API (online)
+- Sphinx fallback (offline)
+- Ambient noise calibration
+
+### 8. **Text-to-Speech** (`Orbit_core/tts/`)
+- `pyttsx_tts.py`: Local TTS engine (pyttsx3)
+- `dispatcher.py`: Routes text to voice output
+- Configurable voice, rate, volume
+- Cross-platform support
+
+### 9. **Event Bus** (`Orbit_core/bus/`)
+- `event_bus.py`: Pub-sub messaging system
+- Decouples modules
+- Extensible for future features
+- Event-driven architecture
+
+---
+
+## 🔄 Data Flow Example
+
+### Example 1: Weather Query
+```
+User: "What's the weather in London?"
+   │
+   ▼
+STT converts to text
+   │
+   ▼
+Intent Classifier: Detects "weather" keyword → Weather Action
+   │
+   ▼
+Weather Action:
+  1. Geocodes "London" → lat/lon
+  2. Calls Open-Meteo API
+  3. Formats response
+   │
+   ▼
+TTS speaks: "Weather in London, UK: Currently clear sky with..."
+```
+
+### Example 2: Knowledge Query
+```
+User: "Who is Einstein?"
+   │
+   ▼
+Intent Classifier: Detects "who is" → Wikipedia Action
+   │
+   ▼
+Wikipedia Action:
+  1. Searches Wikipedia
+  2. Retrieves summary
+  3. Returns first 3 sentences
+   │
+   ▼
+TTS speaks: "According to Wikipedia: Albert Einstein was..."
+```
+
+### Example 3: Conversation
+```
+User: "How do I learn Python?"
+   │
+   ▼
+Intent Classifier: No specific trigger → LLM
+   │
+   ▼
+LLM Router:
+  1. Retrieves conversation context from Memory
+  2. Sends to Ollama with system prompt
+  3. Gemma 3:4B generates response
+   │
+   ▼
+Memory stores exchange
+   │
+   ▼
+TTS speaks response
+```
+
+---
+
+## 🔧 Technology Stack
+
+### Core Technologies
+- **Python 3.8+**: Main language
+- **Ollama**: Local LLM server (Gemma 3:4B)
+- **SQLite**: Conversation memory
+- **speech_recognition**: Voice input
+- **pyttsx3**: Voice output
+
+### APIs (All Free)
+- **Wikipedia API**: Factual knowledge
+- **Open-Meteo**: Weather data
+- **Google Speech API**: Speech recognition (requires internet)
+
+### Optional Dependencies
+- **paho-mqtt**: IoT device control
+- **pyaudio**: Microphone access
+
+---
+
+## 🎯 Key Features
+
+### 1. **Privacy-Focused**
+- All AI processing local via Ollama
+- No data sent to cloud (except Wikipedia/Weather APIs)
+- Full control over conversation data
+
+### 2. **Extensible Architecture**
+- Add new actions by creating new files in `actions/`
+- Plug into event bus for inter-module communication
+- Easy to add new APIs or services
+
+### 3. **Context-Aware**
+- Remembers conversation history
+- Uses context for follow-up questions
+- Example: "Who is Elon Musk?" → "What's his net worth?"
+
+### 4. **Multi-Modal**
+- Text input/output (keyboard)
+- Voice input/output (microphone/speakers)
+- Can switch modes anytime
+
+### 5. **Cross-Platform**
+- Windows, macOS, Linux support
+- OS-specific commands handled automatically
+- Consistent experience across platforms
+
+---
+
+## 📊 File Structure
+
+```
+orbit/
+│
+├── bin/
+│   └── orbit.py                    # Main entry point (200 lines)
+│
+├── Orbit_core/
+│   ├── __init__.py
+│   │
+│   ├── actions/                    # All action handlers
+│   │   ├── __init__.py
+│   │   ├── desktop.py             # Desktop control (100 lines)
+│   │   ├── iot.py                 # IoT control (150 lines)
+│   │   ├── schedule_action.py     # Scheduling (100 lines)
+│   │   ├── weather.py             # Weather API (120 lines)
+│   │   └── wikipedia.py           # Wikipedia API (80 lines)
+│   │
+│   ├── bus/
+│   │   ├── __init__.py
+│   │   └── event_bus.py           # Pub-sub system (50 lines)
+│   │
+│   ├── config/
+│   │   ├── __init__.py
+│   │   └── settings.py            # Configuration (80 lines)
+│   │
+│   ├── intent/
+│   │   ├── __init__.py
+│   │   └── source_selector.py     # Intent classification (150 lines)
+│   │
+│   ├── llm/
+│   │   ├── __init__.py
+│   │   ├── ollama_client.py       # Ollama integration (120 lines)
+│   │   └── router.py              # LLM routing (80 lines)
+│   │
+│   ├── memory/
+│   │   ├── __init__.py
+│   │   └── sqlite_store.py        # Database (120 lines)
+│   │
+│   ├── stt/
+│   │   ├── __init__.py
+│   │   └── deep.py                # Speech recognition (80 lines)
+│   │
+│   └── tts/
+│       ├── __init__.py
+│       ├── pyttsx_tts.py          # TTS engine (60 lines)
+│       └── dispatcher.py          # TTS dispatcher (40 lines)
+│
+├── data/                           # Auto-created
+│   └── orbit_memory.db            # SQLite database
+│
+├── requirements.txt                # Python dependencies
+├── setup.py                        # Installation script
+├── test_orbit.py                   # System tests
+├── quickstart.sh                   # Linux/Mac setup
+├── quickstart.bat                  # Windows setup
+│
+├── README.md                       # Main documentation
+├── INSTALL.md                      # Installation guide
+└── .env.example                    # Environment template
+
+Total: ~1,500 lines of Python code
+```
+
+---
+
+## 🚀 Deployment Options
+
+### 1. **Personal Desktop Assistant**
+- Run on laptop/desktop
+- Always available when computer is on
+- Voice-activated commands
+
+### 2. **Raspberry Pi Server**
+- Deploy on Pi for 24/7 availability
+- Central home automation hub
+- Low power consumption
+
+### 3. **Home Server**
+- Run on NAS or home server
+- Access from multiple devices
+- Can add web interface
+
+### 4. **Docker Container** (Future)
+- Portable deployment
+- Easy updates
+- Isolated environment
+
+---
+
+## 🔮 Future Enhancements
+
+### Short Term
+- [ ] Active background scheduler (run tasks at scheduled time)
+- [ ] Email integration (read/send emails)
+- [ ] Calendar sync (Google Calendar, Outlook)
+- [ ] Spotify control
+
+### Medium Term
+- [ ] Web interface (browser-based control)
+- [ ] Mobile app (iOS/Android companion)
+- [ ] Computer vision (webcam face detection)
+- [ ] Multi-user support
+
+### Long Term
+- [ ] Fine-tuned personality models
+- [ ] Plugin system for community extensions
+- [ ] Multi-modal AI (images + text + voice)
+- [ ] Integration marketplace
+
+---
+
+## 📈 Performance Considerations
+
+### Resource Usage
+- **CPU**: Moderate during LLM inference (2-5 seconds per query)
+- **RAM**: ~4GB for gemma2:2b, ~8GB for larger models
+- **Storage**: ~3GB for model, ~100MB for code and dependencies
+- **Network**: Only for Wikipedia/Weather APIs (minimal)
+
+### Optimization Tips
+1. Use smaller models (gemma2:2b) for faster responses
+2. Reduce context window for memory-constrained systems
+3. Disable voice features if not needed
+4. Run Ollama on dedicated hardware for better performance
+
+---
+
+## 🔐 Security Considerations
+
+### Current Security
+- ✅ Local AI processing (no cloud exposure)
+- ✅ No authentication required (single-user)
+- ✅ Desktop actions limited for safety
+- ✅ SQLite database is local
+
+### Recommendations for Production
+- Add authentication if exposing over network
+- Implement rate limiting
+- Sandbox desktop commands
+- Encrypt sensitive data in database
+- Use HTTPS for IoT device control
+
+---
+
+## 🎓 Learning Resources
+
+### For Customization
+- [Ollama Documentation](https://github.com/ollama/ollama)
+- [SpeechRecognition Docs](https://github.com/Uberi/speech_recognition)
+- [pyttsx3 Documentation](https://pyttsx3.readthedocs.io/)
+- [Open-Meteo API](https://open-meteo.com/en/docs)
+
+### For Extension
+- Add actions: Create new file in `actions/` following existing patterns
+- Change LLM: Modify `ollama_client.py` or add new client
+- Add APIs: Integrate into `source_selector.py`
+- Customize personality: Edit system prompt in `settings.py`
+
+---
+
+**Ready to build your own AI assistant? Start with the quickstart scripts!** 🚀

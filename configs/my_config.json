@@ -1,0 +1,11 @@
+{
+  "assistant_name": "Orbit",
+  "openai_model": "gpt-4o-mini",
+  "openai_base_url": "https://models.inference.ai.azure.com",
+  "EMAIL_ADDRESS": "craniax1143@gmail.com",
+  "EMAIL_PASSWORD": "cypqdypucelktuci",
+  "IMAP_SERVER": "imap.gmail.com",
+  "IMAP_PORT": 993,
+  "SMTP_SERVER": "smtp.gmail.com",
+  "SMTP_PORT": 587
+} 

@@ -1,0 +1,61 @@
+# == CORE & AI ==
+requests
+python-dotenv
+ollama
+openai
+
+# == WEB API SERVER == (REMOVED - Terminal Mode Only)
+
+# == SPEECH & VOICE ==
+SpeechRecognition
+pyttsx3
+PyAudio
+
+# == WHISPER VOICE ASSISTANT (OPTIONAL) ==
+# Install these only if using assistant.py standalone mode:
+# openai-whisper  # Whisper speech-to-text (GPU accelerated)
+# sounddevice     # Audio recording
+# scipy           # Audio file I/O
+# torch           # Required by Whisper (CUDA version for RTX 3050)
+
+google-api-python-client==2.108.0
+protobuf==3.19.6 # Add this line to resolve the conflict
+
+# == SYSTEM CONTROL ==
+psutil
+
+# == PHASE 2: CORE FUNCTIONALITY ==
+# File Management & Automation
+# (uses stdlib: shutil, pathlib, os)
+
+# == PHASE 3: AI & PRODUCTIVITY ==
+# Translation Services
+deep-translator
+
+# Document Processing
+PyPDF2
+openpyxl  # For Excel file support
+# csv (stdlib)
+
+# Task Management & Productivity
+# (uses stdlib: json, datetime, collections)
+
+# Screen Time Tracking
+# (uses stdlib: json, datetime)
+
+# == ADVANCED FEATURES ==
+# Communication
+plyer
+twilio
+
+# Security (dlib/face-recognition removed for now)
+# opencv-python  # Already listed above
+
+# Music
+ytmusicapi
+
+# IoT (Internet of Things)
+paho-mqtt
+
+# Scheduling
+APScheduler
