@@ -20,7 +20,7 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Virtual Environment (DO NOT COMMIT!)
 .venv/
 venv/
 ENV/
@@ -29,18 +29,25 @@ env/
 # Environment variables (contains API keys!)
 .env
 
+# Node.js (Desktop App)
+orbit-desktop-app/node_modules/
+node_modules/
+package-lock.json
+
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.qodo/
 
 # OS
 .DS_Store
 Thumbs.db
+.git/
 
-# Project specific
+# Project specific - Runtime data (DO NOT COMMIT!)
 data/*.db
 data/*.json
 data/communication/
